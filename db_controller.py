@@ -22,7 +22,9 @@ class DatabaseController:
         c.execute('DROP TABLE IF EXISTS teachers;')
         c.execute('DROP TABLE IF EXISTS faculties;')
         c.execute('DROP TABLE IF EXISTS groups;')
+        c.execute('DROP TABLE IF EXISTS pairs;')
         c.execute('DROP INDEX IF EXISTS students_index;')
+        c.execute('DROP INDEX IF EXISTS pairs_index;')
         self.connect.commit()
         c.execute(
             '''
@@ -69,11 +71,25 @@ class DatabaseController:
                                          NOT NULL
             );''')
         c.execute('''
+                    CREATE TABLE IF NOT EXISTS pairs (
+                        id          INTEGER      PRIMARY KEY AUTOINCREMENT NOT NULL 
+                                                 NOT NULL,
+                        name        STRING (175) NOT NULL,
+                        date        STRING (45)  ,
+                        student_id  INTEGER      REFERENCES students (id) ON DELETE CASCADE
+                                                 NOT NULL
+                    );''')
+        c.execute('''
         CREATE INDEX IF NOT EXISTS students_index ON students (
             name ASC,
             id ASC,
             course ASC,
             group_id ASC
+        );''')
+        c.execute('''
+            CREATE INDEX IF NOT EXISTS pairs_index ON pairs (
+                student_id ASC,
+                id ASC
         );''')
         self.insert_teacher('Отсутствует')
         self.insert_faculty('Отсутствует')
@@ -183,6 +199,22 @@ class DatabaseController:
                   )
                   VALUES (?,?,?,?,?,?,?,?);
                 ''', student)
+        c.execute('SELECT id, name, group_id FROM students WHERE name=? and group_id=?', (student[0], student[1],))
+        return c.fetchone()[0]
+
+    def insert_pairs(self, pairs):
+        """ Вносит данные в таблицу students
+        :param pairs: Массив с кортежами для таблицы pairs.
+        :type pairs: list"""
+        c = self.connect.cursor()
+        c.executemany('''
+                    INSERT INTO pairs (
+                      date,
+                      name,
+                      student_id
+                  )
+                  VALUES (?,?,?);
+                ''', pairs)
 
     def update_info(self, name, status):
         """ Вносит или обновляет информацию в системной таблице info """
@@ -226,6 +258,10 @@ class DatabaseController:
                 each[5] = 'Отсутствует' if each[5] == '' else each[5]
                 each[6] = 'Отсутствует' if each[6] == '' else each[6]
                 each[7] = -1 if each[7] == '' else int(each[7])
-                self.insert_student(tuple(each))
-            except:
-                print(each)
+                id = self.insert_student(tuple(each[:8]))
+                if each[7] > 0:
+                    pairs = [tuple(i + [id]) for i in each[8]]
+                    self.insert_pairs(pairs)
+
+            except Exception as e:
+                print(e, each[0])

@@ -21,15 +21,17 @@ class Parser:
         :returns result: array
         """
         rows = self.sht.row_count
+        columns = self.sht.col_count
         result = []
-        data = self.sht.range(2, 1, rows, 8)
+        first_row = [i.value for i in self.sht.range(1, 1, 1, columns)]
+        data = self.sht.range(2, 1, rows, columns)
+        for each in range(0, len(data), columns):
+            pairs = []
+            for key in range(8, columns):
+                if data[key + each].value != '':
+                    pairs.append([first_row[key], data[key + each].value])
 
-        for each in range(0, len(data), 8):
-            result.append([i.value for i in data[each:each + 8]])
+            result.append(
+                [i.value for i in data[each:each + 8]] + [pairs])
 
         return result
-
-
-if __name__ == '__main__':
-    parser = Parser('AUTH_FILE.json')
-    res = parser.fetch_all_values()
