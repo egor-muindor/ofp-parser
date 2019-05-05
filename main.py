@@ -13,7 +13,7 @@ if __name__ == '__main__':
     temp_name = os.path.join(path_to_db, 'temp.db')  # Временный файл БД (создается при заполнении БД)
     name_db = os.path.join(path_to_db, 'my.db')  # Финальный файл БД
     parser = Parser('PATH_TO_AUTH_FILE.json')  # Путь к вашему файлу авторизации
-    data = parser.fetch_all_values()
+    data = [parser.fetch_all_values(), parser.fetch_all_standards()]
     db = DatabaseController(temp_name)
     db.insert_from_data(data)
     if db.exit():

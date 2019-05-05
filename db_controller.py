@@ -23,6 +23,7 @@ class DatabaseController:
         c.execute('DROP TABLE IF EXISTS faculties;')
         c.execute('DROP TABLE IF EXISTS groups;')
         c.execute('DROP TABLE IF EXISTS pairs;')
+        c.execute('DROP TABLE IF EXISTS standards;')
         c.execute('DROP INDEX IF EXISTS students_index;')
         c.execute('DROP INDEX IF EXISTS pairs_index;')
         self.connect.commit()
@@ -80,6 +81,17 @@ class DatabaseController:
                                                  NOT NULL
                     );''')
         c.execute('''
+                    CREATE TABLE IF NOT EXISTS standards (
+                        id          INTEGER      PRIMARY KEY AUTOINCREMENT NOT NULL 
+                                                 NOT NULL,
+                        name        STRING (175) NOT NULL,
+                        date        STRING (45),
+                        result      STRING (45),
+                        score       STRING (45),
+                        student_id  INTEGER      REFERENCES students (id) ON DELETE CASCADE
+                                                 NOT NULL
+                    );''')
+        c.execute('''
         CREATE INDEX IF NOT EXISTS students_index ON students (
             name ASC,
             id ASC,
@@ -110,7 +122,7 @@ class DatabaseController:
         return c.fetchone()[0]
 
     def find_or_new_group(self, group):
-        """ Возвращает id преподавателя, если не находит - создает нового
+        """ Возвращает id группы, если не находит - создает новую
         :param group: Название группы.
         :type group: str
 
@@ -203,7 +215,7 @@ class DatabaseController:
         return c.fetchone()[0]
 
     def insert_pairs(self, pairs):
-        """ Вносит данные в таблицу students
+        """ Вносит данные в таблицу pairs
         :param pairs: Массив с кортежами для таблицы pairs.
         :type pairs: list"""
         c = self.connect.cursor()
@@ -215,6 +227,22 @@ class DatabaseController:
                   )
                   VALUES (?,?,?);
                 ''', pairs)
+
+    def insert_standard(self, standards):
+        """ Вносит данные в таблицу standards
+        :param standards: Массив с кортежами для таблицы pairs.
+        :type standards: list"""
+        c = self.connect.cursor()
+        c.executemany('''
+                    INSERT INTO standards (
+                      date,
+                      name,
+                      result,
+                      score,
+                      student_id
+                  )
+                  VALUES (?,?,?,?,?);
+                ''', standards)
 
     def update_info(self, name, status):
         """ Вносит или обновляет информацию в системной таблице info """
@@ -228,6 +256,18 @@ class DatabaseController:
         c = self.connect.cursor()
         c.execute("SELECT id, name from teachers where name LIKE ? LIMIT 30", ("%{}%".format(name.title()),))
         result = c.fetchall()
+        if not result:
+            return False
+        else:
+            return result
+
+    def find_student(self, name, group):
+        """ Возвращает id студента, если не найден - вернет False """
+        c = self.connect.cursor()
+        c.execute("SELECT students.id, students.name, groups.name from students "
+                  "inner join groups on groups.id = students.group_id "
+                  "where students.name LIKE ? and groups.name = ? LIMIT 30", ("%{}%".format(name.title()), group))
+        result = c.fetchone()
         if not result:
             return False
         else:
@@ -247,7 +287,7 @@ class DatabaseController:
     def insert_from_data(self, data):
         """Вносит значения в БД из парсера"""
 
-        for each in data:
+        for each in data[0]:
             if each[0] == '' or each[1] == '':
                 continue
             try:
@@ -262,6 +302,19 @@ class DatabaseController:
                 if each[7] > 0:
                     pairs = [tuple(i + [id]) for i in each[8]]
                     self.insert_pairs(pairs)
+
+            except Exception as e:
+                print(e, each[0])
+
+        standards = []
+        for each in data[1]:
+            if each[0] == '' or each[1] == '':
+                continue
+            try:
+                id = self.find_student(each[0], each[1])
+
+                if id and len(each[6]) > 0:
+                    self.insert_standard([tuple(i + [id[0]]) for i in each[6]])
 
             except Exception as e:
                 print(e, each[0])
