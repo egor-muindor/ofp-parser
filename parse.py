@@ -13,11 +13,11 @@ class Parser:
         credentials = ServiceAccountCredentials.from_json_keyfile_name(json_name,
                                                                        'https://spreadsheets.google.com/feeds')
         self.gs = gspread.authorize(credentials)
-        self.sht = self.gs.open_by_url('https://docs.google.com/spreadsheets/d'
-                                       '/1VElk298_tbpeYPsTvHLcFB2Crk6jUWGcCG4vGNvM-Xw').sheet1  # google table url
+        self.sht = self.gs.open_by_url('https://docs.google.com/spreadsheets'
+                                       '/d/1Hx90XZAl1wluJ7loDmMm_a3P8BpPtAKBM1oqnRygtAc').sheet1  # google table url
 
-        self.sht2 = self.gs.open_by_url('https://docs.google.com/spreadsheets/d'
-                                        '/1VElk298_tbpeYPsTvHLcFB2Crk6jUWGcCG4vGNvM-Xw').get_worksheet(1)
+        self.sht2 = self.gs.open_by_url('https://docs.google.com/spreadsheets'
+                                        '/d/1Hx90XZAl1wluJ7loDmMm_a3P8BpPtAKBM1oqnRygtAc').get_worksheet(1)
         # google table url
 
     def fetch_all_values(self):
@@ -31,12 +31,12 @@ class Parser:
         first_row = [i.value for i in data[0:columns]]
         for each in range(columns, len(data), columns):
             pairs = []
-            for key in range(8, columns):
+            for key in range(9, columns):
                 if data[key + each].value != '':
                     pairs.append([first_row[key], data[key + each].value])
 
             result.append(
-                [i.value for i in data[each:each + 8]] + [pairs])
+                [i.value for i in data[each:each + 9]] + [pairs])
 
         return result
 
