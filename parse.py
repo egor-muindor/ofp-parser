@@ -9,6 +9,9 @@ except ImportError as e:
 class Parser:
 
     def __init__(self, json_name):
+        # DEBUG PRINT
+        self.debug = False
+
         # init Google API key
         credentials = ServiceAccountCredentials.from_json_keyfile_name(json_name,
                                                                        'https://spreadsheets.google.com/feeds')
@@ -30,13 +33,18 @@ class Parser:
         data = self.sht.range(1, 1, rows, columns)
         first_row = [i.value for i in data[0:columns]]
         for each in range(columns, len(data), columns):
+            if data[each].value == '':
+                continue
             pairs = []
-            for key in range(9, columns):
+            if self.debug:
+                print(data[each].value)
+            for key in range(10, columns):
                 if data[key + each].value != '':
                     pairs.append([first_row[key], data[key + each].value])
-
+                    if self.debug:
+                        print(first_row[key], data[key + each].value)
             result.append(
-                [i.value for i in data[each:each + 9]] + [pairs])
+                [i.value for i in data[each:each + 10]] + [pairs])
 
         return result
 

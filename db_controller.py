@@ -287,21 +287,20 @@ class DatabaseController:
     def insert_from_data(self, data):
         """Вносит значения в БД из парсера"""
 
-        print(data)
         for each in data[0]:
             if each[0] == '':
                 continue
             try:
-                each[1] = self.find_or_new_group(each[2])
-                each[2] = -1 if each[3] == '' else int(each[3])
-                each[3] = 1 if each[4] == '' else self.find_or_new_faculty(each[4])
-                each[4] = 1 if each[5] == '' else self.find_or_new_teacher(each[5])
-                each[5] = 'Отсутствует' if each[6] == '' else each[6]
-                each[6] = 'Отсутствует' if each[7] == '' else each[7]
-                each[7] = -1 if each[8] == '' else int(each[8])
+                each[1] = self.find_or_new_group(each[1])
+                each[2] = -1 if each[2] == '' else int(each[2])
+                each[3] = 1 if each[3] == '' else self.find_or_new_faculty(each[3])
+                each[4] = 1 if each[4] == '' else self.find_or_new_teacher(each[4])
+                each[5] = 'Отсутствует' if each[5] == '' else each[5]
+                each[6] = 'Отсутствует' if each[6] == '' else each[6]
+                each[7] = -1 if each[9] == '' else int(each[9])
                 id = self.insert_student(tuple(each[:8]))
-                if int(each[8]) > 0:
-                    pairs = [tuple(i + [id]) for i in each[9]]
+                if len(each[10]) > 0:
+                    pairs = [tuple(i + [id]) for i in each[10]]
                     self.insert_pairs(pairs)
 
             except Exception as e:
